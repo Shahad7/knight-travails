@@ -1,3 +1,18 @@
+let moves;
+let count = 1;
+let root, lastLeaf;
+let prevs = [];
+let currentPrevs = [];
+let node;
+
+//helper functions
+function Node(value = null) {
+	return {
+		value: value,
+		prev: null,
+	};
+}
+
 function generateMoves([x, y]) {
 	let moves = [];
 	if (isValid([x + 2, y + 1])) moves.push([x + 2, y + 1]);
@@ -24,24 +39,66 @@ function hasReached(locations, dest) {
 	else return false;
 }
 
-let moves;
-let i = 1;
+function linkToParent(nodes, parent) {
+	if (prevs.length == 0) {
+		parent = Node(parent);
+		nodes.forEach((elt) => {
+			node = Node(elt);
+			node.prev = parent;
+			prevs.push(node);
+		});
+	} else {
+		prevs.forEach((elt) => {
+			if (elt.value.toString() == parent.toString()) parent = elt;
+		});
 
+		nodes.forEach((elt) => {
+			node = Node(elt);
+			node.prev = parent;
+			currentPrevs.push(node);
+		});
+	}
+}
+
+function printPath(dest) {
+	let toPrint = [];
+	prevs.forEach((elt) => {
+		if (elt.value.toString() == dest.toString()) dest = elt;
+	});
+	let node = dest;
+	while (node.prev != null) {
+		toPrint.push(node.value);
+		node = node.prev;
+	}
+	toPrint.push(node.value);
+	toPrint = toPrint.reverse();
+	toPrint.forEach((elt) => {
+		console.log(elt);
+	});
+}
+
+//main
 function knightTravails(source, destination) {
 	if (source.length == 2 && typeof source[0] == 'number') {
 		moves = generateMoves(source);
+		linkToParent(moves, source);
 	} else {
 		moves.length = 0;
 		source.forEach((elt) => {
-			moves = moves.concat(generateMoves(elt));
+			let nextMoves = generateMoves(elt);
+			linkToParent(nextMoves, elt);
+			moves = moves.concat(nextMoves);
 		});
+		prevs = currentPrevs;
 	}
-	if (hasReached(moves, destination)) console.log(i + ' moves');
-	else {
+	if (hasReached(moves, destination)) {
+		console.log(`You made it in ${count} moves!  Here's your path:`);
+		printPath(destination);
+	} else {
 		source = moves.slice();
-		i++;
+		count++;
 		knightTravails(source, destination);
 	}
 }
 
-knightTravails([3, 3], [5, 4]);
+knightTravails([1, 1], [8, 8]);
